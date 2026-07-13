@@ -1,10 +1,10 @@
 {
-  "id": "obsidian-mindmap",
+  "id": "mindmap",
   "name": "Mind Map",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "Brainstorming-focused mind map plugin with auto-organized layouts and keyboard shortcuts",
-  "author": "",
-  "authorUrl": "",
+  "author": "William Dang",
+  "authorUrl": "https://github.com/duybaodg/obsidian-mindmap-plugin.git",
   "isDesktopOnly": false
 }
