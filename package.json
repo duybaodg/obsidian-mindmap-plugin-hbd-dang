@@ -1,6 +1,6 @@
 {
   "name": "obsidian-mindmap",
-  "version": "0.1.0",
+  "version": "1.0.2",
   "description": "Brainstorming-focused mind map plugin for Obsidian",
   "main": "main.js",
   "scripts": {

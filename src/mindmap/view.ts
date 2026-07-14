@@ -827,7 +827,7 @@ export class MindMapView extends ItemView {
         object(5, `<< /Length ${encoder.encode(content).length} >>\nstream\n${content}endstream`);
 
         const xref = offset;
-        add(`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((entry) => `${entry.toString().padStart(10, "0")} 00000 n `).join("\n")}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+        add(`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((entry) => `${(`0000000000${entry}`).slice(-10)} 00000 n `).join("\n")}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
         return new Blob(chunks, { type: "application/pdf" });
     }
 

@@ -9,7 +9,7 @@ export class MindMapSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        new Setting(containerEl).setName('Mind Map Settings').setHeading();
+        new Setting(containerEl).setName('Mind Map').setHeading();
 
         containerEl.createEl('p', {
             text: 'Additional settings will be added in future versions.'

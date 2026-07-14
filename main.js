@@ -1793,7 +1793,7 @@ ${content}endstream`);
     add(`xref
 0 6
 0000000000 65535 f 
-${offsets.slice(1).map((entry) => `${entry.toString().padStart(10, "0")} 00000 n `).join("\n")}
+${offsets.slice(1).map((entry) => `${`0000000000${entry}`.slice(-10)} 00000 n `).join("\n")}
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
@@ -2644,7 +2644,7 @@ var MindMapSettingTab = class extends import_obsidian3.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian3.Setting(containerEl).setName("Mind Map Settings").setHeading();
+    new import_obsidian3.Setting(containerEl).setName("Mind Map").setHeading();
     containerEl.createEl("p", {
       text: "Additional settings will be added in future versions."
     });
