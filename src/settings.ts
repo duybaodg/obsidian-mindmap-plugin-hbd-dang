@@ -1,4 +1,4 @@
-import { PluginSettingTab, App, Plugin } from "obsidian";
+import { PluginSettingTab, App, Plugin, Setting } from "obsidian";
 
 export class MindMapSettingTab extends PluginSettingTab {
     constructor(app: App, plugin: Plugin) {
@@ -9,7 +9,7 @@ export class MindMapSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Mind Map Settings' });
+        new Setting(containerEl).setName('Mind Map Settings').setHeading();
 
         containerEl.createEl('p', {
             text: 'Additional settings will be added in future versions.'

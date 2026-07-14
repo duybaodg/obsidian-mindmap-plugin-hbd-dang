@@ -86,7 +86,7 @@ export class MindMapCanvas {
 
     private createSVG(): void {
         if (!this.svgElement) {
-            this.svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            this.svgElement = activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
             this.svgElement.classList.add("mindmap-svg");
             this.svgElement.addEventListener("pointerdown", (event) => this.handleSvgPointerDown(event));
             this.svgElement.addEventListener("contextmenu", (event) => this.handleSvgContextMenu(event));
@@ -191,7 +191,7 @@ export class MindMapCanvas {
     private renderEdge(from: LayoutPosition, to: LayoutPosition): void {
         if (!this.svgElement) return;
 
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const path = activeDocument.createElementNS("http://www.w3.org/2000/svg", "path");
         const displayFrom = this.toDisplayPosition(from);
         const displayTo = this.toDisplayPosition(to);
         const startX = displayFrom.x + MindMapCanvas.NODE_WIDTH / 2;
@@ -224,7 +224,7 @@ export class MindMapCanvas {
     }
 
     private createEdgePath(from: LayoutPosition, to: LayoutPosition): SVGPathElement {
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const path = activeDocument.createElementNS("http://www.w3.org/2000/svg", "path");
         const displayFrom = this.toDisplayPosition(from);
         const displayTo = this.toDisplayPosition(to);
         const startX = displayFrom.x + MindMapCanvas.NODE_WIDTH / 2;
@@ -256,7 +256,7 @@ export class MindMapCanvas {
         const pos = this.positions.get(node.id);
         if (!pos) return;
 
-        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const g = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
         g.setAttribute("data-node-id", node.id);
         g.setAttribute("class", "mindmap-node");
         this.setNodeTransform(g, pos);
@@ -264,7 +264,7 @@ export class MindMapCanvas {
         g.addEventListener("pointerup", (event) => this.handleNodePointerUp(event, node.id));
         g.addEventListener("contextmenu", (event) => this.handleNodeContextMenu(event, node.id));
 
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        const rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
         rect.setAttribute("width", String(MindMapCanvas.NODE_WIDTH));
         rect.setAttribute("height", String(MindMapCanvas.NODE_HEIGHT));
         rect.setAttribute("rx", "8");
@@ -273,17 +273,17 @@ export class MindMapCanvas {
         g.appendChild(rect);
 
         if (node.children.length > 0 && node.id !== this.editingNodeId) {
-            const toggle = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const toggle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
             toggle.setAttribute("class", "mindmap-node-action");
             toggle.setAttribute("data-node-action", "toggle");
             toggle.setAttribute("transform", "translate(12, 24)");
 
-            const toggleCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const toggleCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
             toggleCircle.setAttribute("r", "10");
             toggleCircle.setAttribute("class", "mindmap-node-action-circle");
             toggle.appendChild(toggleCircle);
 
-            const toggleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            const toggleText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
             toggleText.setAttribute("text-anchor", "middle");
             toggleText.setAttribute("y", "4");
             toggleText.setAttribute("class", "mindmap-node-action-text");
@@ -296,7 +296,7 @@ export class MindMapCanvas {
         if (node.id === this.editingNodeId) {
             this.renderInlineEditor(g, node);
         } else {
-            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            const text = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
             text.setAttribute("x", String(MindMapCanvas.NODE_WIDTH / 2));
             text.setAttribute("y", "29");
             text.setAttribute("text-anchor", "middle");
@@ -306,7 +306,7 @@ export class MindMapCanvas {
         }
 
         if (node.children.length > 0) {
-            const badge = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            const badge = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
             badge.setAttribute("x", "30");
             badge.setAttribute("y", "43");
             badge.setAttribute("text-anchor", "middle");
@@ -316,18 +316,18 @@ export class MindMapCanvas {
         }
 
         if (node.note) {
-            const noteBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const noteBadge = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
             noteBadge.setAttribute("class", "mindmap-node-note-indicator");
             noteBadge.setAttribute("transform", "translate(0, 0)");
 
-            const noteCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const noteCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
             noteCircle.setAttribute("cx", "0");
             noteCircle.setAttribute("cy", "0");
             noteCircle.setAttribute("r", "8");
             noteCircle.setAttribute("class", "mindmap-node-note-bubble");
             noteBadge.appendChild(noteCircle);
 
-            const noteText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            const noteText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
             noteText.setAttribute("text-anchor", "middle");
             noteText.setAttribute("y", "4");
             noteText.setAttribute("class", "mindmap-node-note-text");
@@ -337,17 +337,17 @@ export class MindMapCanvas {
             g.appendChild(noteBadge);
         }
 
-        const add = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const add = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
         add.setAttribute("class", "mindmap-node-action");
         add.setAttribute("data-node-action", "add-child");
         add.setAttribute("transform", `translate(${MindMapCanvas.NODE_WIDTH - 12}, 24)`);
 
-        const addCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const addCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
         addCircle.setAttribute("r", "10");
         addCircle.setAttribute("class", "mindmap-node-action-circle");
         add.appendChild(addCircle);
 
-        const addText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        const addText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
         addText.setAttribute("text-anchor", "middle");
         addText.setAttribute("y", "4");
         addText.setAttribute("class", "mindmap-node-action-text");
@@ -356,17 +356,17 @@ export class MindMapCanvas {
 
         g.appendChild(add);
 
-        const remove = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const remove = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
         remove.setAttribute("class", "mindmap-node-action mindmap-node-action-danger");
         remove.setAttribute("data-node-action", "delete");
         remove.setAttribute("transform", `translate(${MindMapCanvas.NODE_WIDTH - 12}, -2)`);
 
-        const removeCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const removeCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
         removeCircle.setAttribute("r", "9");
         removeCircle.setAttribute("class", "mindmap-node-action-circle");
         remove.appendChild(removeCircle);
 
-        const removeText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        const removeText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
         removeText.setAttribute("text-anchor", "middle");
         removeText.setAttribute("y", "4");
         removeText.setAttribute("class", "mindmap-node-action-text");
@@ -380,13 +380,13 @@ export class MindMapCanvas {
     }
 
     private renderInlineEditor(group: SVGGElement, node: MindMapNode): void {
-        const foreignObject = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+        const foreignObject = activeDocument.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
         foreignObject.setAttribute("x", "14");
         foreignObject.setAttribute("y", "8");
         foreignObject.setAttribute("width", String(MindMapCanvas.NODE_WIDTH - 28));
         foreignObject.setAttribute("height", String(MindMapCanvas.NODE_HEIGHT - 16));
 
-        const input = document.createElement("input");
+        const input = activeDocument.createElement("input");
         input.type = "text";
         input.value = node.content;
         input.className = "mindmap-inline-rename";
@@ -628,7 +628,7 @@ export class MindMapCanvas {
     }
 
     private getDropTarget(clientX: number, clientY: number, draggedNodeId: string): string | null {
-        for (const element of document.elementsFromPoint(clientX, clientY)) {
+        for (const element of activeDocument.elementsFromPoint(clientX, clientY)) {
             const nodeElement = element.closest("[data-node-id]");
             const nodeId = nodeElement?.getAttribute("data-node-id") ?? null;
             if (nodeId && nodeId !== draggedNodeId) {
@@ -679,7 +679,7 @@ export class MindMapCanvas {
 
         let rect = this.svgElement.querySelector<SVGRectElement>(".mindmap-selection-box");
         if (!rect) {
-            rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
             rect.setAttribute("class", "mindmap-selection-box");
             this.svgElement.appendChild(rect);
         }

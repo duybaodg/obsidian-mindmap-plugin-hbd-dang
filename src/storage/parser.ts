@@ -33,8 +33,8 @@ export function parseMindMap(content: string): MindMapData | null {
             return null;
         }
 
-        const data = parseYaml(frontmatterMatch[1]);
-        if (!data?.mindmap) return null;
+        const data: unknown = parseYaml(frontmatterMatch[1]);
+        if (!isRecord(data) || !("mindmap" in data)) return null;
 
         return normalizeMindMap(data.mindmap);
     } catch (e) {
@@ -43,11 +43,15 @@ export function parseMindMap(content: string): MindMapData | null {
     }
 }
 
-function normalizeMindMap(data: any): MindMapData | null {
-    if (!data.root) return null;
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
+function normalizeMindMap(data: unknown): MindMapData | null {
+    if (!isRecord(data) || !("root" in data)) return null;
 
     return migrateMindMap({
-        version: data.version || "1.0",
+        version: typeof data.version === "string" ? data.version : "1.0",
         root: normalizeNode(data.root),
         connections: normalizeConnections(data.connections),
         view: normalizeViewState(data.view)
@@ -72,26 +76,28 @@ function migrateMindMap(data: MindMapData): MindMapData {
     };
 }
 
-function normalizeNode(node: any): MindMapNode {
+function normalizeNode(node: unknown): MindMapNode {
     if (Array.isArray(node)) {
         node = node[0] ?? {};
     }
 
+    const value = isRecord(node) ? node : {};
+
     return {
-        id: node.id || crypto.randomUUID(),
-        content: node.content || "Untitled",
-        note: normalizeOptionalText(node.note),
-        linkedFilePath: normalizeOptionalText(node.linkedFilePath),
-        children: Array.isArray(node.children)
-            ? node.children.map(normalizeNode)
+        id: typeof value.id === "string" ? value.id : crypto.randomUUID(),
+        content: typeof value.content === "string" ? value.content : "Untitled",
+        note: normalizeOptionalText(value.note),
+        linkedFilePath: normalizeOptionalText(value.linkedFilePath),
+        children: Array.isArray(value.children)
+            ? value.children.map(normalizeNode)
             : [],
-        collapsed: node.collapsed === true ? true : undefined,
-        position: normalizePosition(node.position)
+        collapsed: value.collapsed === true ? true : undefined,
+        position: normalizePosition(value.position)
     };
 }
 
-function normalizePosition(position: any): { x: number; y: number } | undefined {
-    if (!position || typeof position.x !== "number" || typeof position.y !== "number") {
+function normalizePosition(position: unknown): { x: number; y: number } | undefined {
+    if (!isRecord(position) || typeof position.x !== "number" || typeof position.y !== "number") {
         return undefined;
     }
 
@@ -101,12 +107,12 @@ function normalizePosition(position: any): { x: number; y: number } | undefined 
     };
 }
 
-function normalizeOptionalText(value: any): string | undefined {
+function normalizeOptionalText(value: unknown): string | undefined {
     return typeof value === "string" && value.trim().length > 0 ? value : undefined;
 }
 
-function normalizeViewState(view: any): MindMapDocumentViewState | undefined {
-    if (!view) return undefined;
+function normalizeViewState(view: unknown): MindMapDocumentViewState | undefined {
+    if (!isRecord(view)) return undefined;
 
     const zoom = typeof view.zoom === "number" ? Math.min(2.5, Math.max(0.4, view.zoom)) : DEFAULT_VIEW_STATE.zoom;
     const pan = normalizePosition(view.pan) ?? DEFAULT_VIEW_STATE.pan;
@@ -117,11 +123,13 @@ function normalizeViewState(view: any): MindMapDocumentViewState | undefined {
     };
 }
 
-function normalizeConnections(connections: any): MindMapConnection[] {
+function normalizeConnections(connections: unknown): MindMapConnection[] {
     if (!Array.isArray(connections)) return [];
 
     return connections
-        .filter((connection) => typeof connection?.fromNodeId === "string" && typeof connection?.toNodeId === "string")
+        .filter((connection): connection is Record<string, unknown> & { fromNodeId: string; toNodeId: string } => isRecord(connection)
+            && typeof connection.fromNodeId === "string"
+            && typeof connection.toNodeId === "string")
         .map((connection) => ({
             id: typeof connection.id === "string" ? connection.id : crypto.randomUUID(),
             fromNodeId: connection.fromNodeId,

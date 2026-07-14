@@ -43,16 +43,13 @@ export function registerCommands(app: App, plugin: Plugin): void {
         id: "obsidian-mindmap-save",
         name: "Mind map: Save current mind map",
         checkCallback: (checking: boolean) => {
-            const activeLeaf = app.workspace.activeLeaf;
-            if (!activeLeaf || activeLeaf.view.getViewType() !== VIEW_TYPE) {
+            const view = app.workspace.getActiveViewOfType(MindMapView);
+            if (!view) {
                 return false;
             }
 
             if (!checking) {
-                const view = activeLeaf.view as MindMapView;
-                if (view instanceof MindMapView) {
-                    void view.save();
-                }
+                void view.save();
             }
 
             return true;

@@ -144,6 +144,20 @@
     outline: none;
 }
 
+.mindmap-node-note-modal-shell {
+    width: min(640px, calc(100vw - 48px)) !important;
+    max-width: calc(100vw - 48px) !important;
+    max-height: 90vh !important;
+}
+
+.mindmap-node-note-modal,
+.mindmap-node-note-textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+}
+
 .mindmap-selection-box {
     fill: color-mix(in srgb, var(--interactive-accent) 16%, transparent);
     stroke: var(--interactive-accent);

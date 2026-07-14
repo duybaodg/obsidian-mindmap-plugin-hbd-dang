@@ -1,0 +1,42 @@
+## Source code
+
+- **Error**: Uses Obsidian APIs newer than the declared `minAppVersion`
+  - obsidianmd/no-unsupported-api
+  - src/commands/index.ts:9, src/commands/index.ts:28, src/main.ts:18, src/mindmap/view.ts:699, src/mindmap/view.ts:700-702, src/mindmap/view.ts:867, src/mindmap/view.ts:868-870, src/mindmap/view.ts:873, src/mindmap/view.ts:874-876, src/mindmap/view.ts:879, src/mindmap/view.ts:880-882, src/mindmap/view.ts:888, src/mindmap/view.ts:889-891, src/mindmap/view.ts:895, src/mindmap/view.ts:896, src/mindmap/view.ts:897-899, src/mindmap/view.ts:977
+- **Error**: Sets styles directly instead of using CSS classes, `setCssProps`, or `setCssStyles`
+  - obsidianmd/no-static-styles-assignment
+  - src/mindmap/view.ts:1586, src/mindmap/view.ts:1587, src/mindmap/view.ts:1588, src/mindmap/view.ts:1591, src/mindmap/view.ts:1592, src/mindmap/view.ts:1593, src/mindmap/view.ts:1594, src/mindmap/view.ts:1598, src/mindmap/view.ts:1599, src/mindmap/view.ts:1600, src/mindmap/view.ts:1601
+- **Error**: For a consistent UI use `new Setting(containerEl).setName(...).setHeading()` instead of creating HTML heading elements directly.
+  - src/settings.ts:12
+- **Warning**: "builtin-modules" should be replaced with an alternative package.
+  - https://github.com/es-tooling/module-replacements/blob/main/docs/modules/builtin-modules.md
+  - package.json:20
+- **Warning**: Use 'activeDocument' instead of 'document' for popout window compatibility.
+  - src/mindmap/canvas.ts:89, src/mindmap/canvas.ts:194, src/mindmap/canvas.ts:227, src/mindmap/canvas.ts:259, src/mindmap/canvas.ts:267, src/mindmap/canvas.ts:276, src/mindmap/canvas.ts:281, src/mindmap/canvas.ts:286, src/mindmap/canvas.ts:299, src/mindmap/canvas.ts:309, src/mindmap/canvas.ts:319, src/mindmap/canvas.ts:323, src/mindmap/canvas.ts:330, src/mindmap/canvas.ts:340, src/mindmap/canvas.ts:345, src/mindmap/canvas.ts:350, src/mindmap/canvas.ts:359, src/mindmap/canvas.ts:364, src/mindmap/canvas.ts:369, src/mindmap/canvas.ts:383, src/mindmap/canvas.ts:389, src/mindmap/canvas.ts:631, src/mindmap/canvas.ts:682, src/mindmap/view.ts:740, src/mindmap/view.ts:770, src/mindmap/view.ts:845, src/mindmap/view.ts:1443, src/mindmap/view.ts:1454, src/mindmap/view.ts:1466, src/mindmap/view.ts:1480
+- **Warning**: Use '.instanceOf(HTMLInputElement)' instead of 'instanceof HTMLInputElement' for cross-window safe type checking.
+  - src/mindmap/view.ts:683
+- **Warning**: Use '.instanceOf(HTMLTextAreaElement)' instead of 'instanceof HTMLTextAreaElement' for cross-window safe type checking.
+  - src/mindmap/view.ts:684
+- **Warning**: This assertion is unnecessary since the receiver accepts the original type of the expression.
+  - src/mindmap/view.ts:811
+- **Warning**: Unsafe call of an `error` or `any` typed value
+  - @typescript-eslint/no-unsafe-call
+  - src/mindmap/view.ts:830, src/storage/parser.ts:86
+- **Warning**: Unexpected control character(s) in regular expression: \x00, \x1f.
+  - src/mindmap/view.ts:854
+- **Warning**: Unsafe assignment of an `error` or `any` typed value
+  - @typescript-eslint/no-unsafe-assignment
+  - src/storage/parser.ts:36, src/storage/parser.ts:50, src/storage/parser.ts:77, src/storage/parser.ts:81, src/storage/parser.ts:82, src/storage/parser.ts:85-87, src/storage/parser.ts:99, src/storage/parser.ts:100, src/storage/parser.ts:126, src/storage/parser.ts:127, src/storage/parser.ts:128
+- **Warning**: Unsafe member access on an `error` or `any` typed value
+  - @typescript-eslint/no-unsafe-member-access
+  - src/storage/parser.ts:37, src/storage/parser.ts:39, src/storage/parser.ts:47, src/storage/parser.ts:50, src/storage/parser.ts:51, src/storage/parser.ts:52, src/storage/parser.ts:53, src/storage/parser.ts:81, src/storage/parser.ts:82, src/storage/parser.ts:83, src/storage/parser.ts:84, src/storage/parser.ts:85, src/storage/parser.ts:86, src/storage/parser.ts:88, src/storage/parser.ts:89, src/storage/parser.ts:94, src/storage/parser.ts:94, src/storage/parser.ts:99, src/storage/parser.ts:100, src/storage/parser.ts:111, src/storage/parser.ts:111, src/storage/parser.ts:112, src/storage/parser.ts:124, src/storage/parser.ts:124, src/storage/parser.ts:126, src/storage/parser.ts:126, src/storage/parser.ts:127, src/storage/parser.ts:128
+- **Warning**: Unexpected any. Specify a different type.
+  - src/storage/parser.ts:46, src/storage/parser.ts:75, src/storage/parser.ts:93, src/storage/parser.ts:104, src/storage/parser.ts:108, src/storage/parser.ts:120
+- **Warning**: Passes unsafe values into typed parameters
+  - @typescript-eslint/no-unsafe-argument
+  - src/storage/parser.ts:111
+- **Recommendation**: `activeLeaf` is deprecated. The use of this field is discouraged.
+The recommended alternatives are:
+- If you need information about the current view, use {@link Workspace.getActiveViewOfType}.
+- If you need to open a new file or navigate a view, use {@link Workspace.getLeaf}.
+  - src/commands/index.ts:46, src/mindmap/view.ts:678

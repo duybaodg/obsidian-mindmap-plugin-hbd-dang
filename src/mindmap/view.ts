@@ -675,13 +675,13 @@ export class MindMapView extends ItemView {
     }
 
     private isActiveMindMapView(): boolean {
-        return this.app.workspace.activeLeaf?.view === this;
+        return this.app.workspace.getActiveViewOfType(MindMapView) === this;
     }
 
     private isTextInputTarget(target: EventTarget | null): boolean {
         if (!(target instanceof HTMLElement)) return false;
-        return target instanceof HTMLInputElement
-            || target instanceof HTMLTextAreaElement
+        return target.instanceOf(HTMLInputElement)
+            || target.instanceOf(HTMLTextAreaElement)
             || target.isContentEditable;
     }
 
@@ -737,7 +737,7 @@ export class MindMapView extends ItemView {
                 img.src = url;
             });
             const scale = 2;
-            const canvas = document.createElement("canvas");
+            const canvas = activeDocument.createElement("canvas");
             canvas.width = exportSvg.width * scale;
             canvas.height = exportSvg.height * scale;
             const context = canvas.getContext("2d");
@@ -767,7 +767,7 @@ export class MindMapView extends ItemView {
         clone.setAttribute("height", String(height));
         this.inlineSvgStyles(source, clone);
 
-        const backgroundRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        const backgroundRect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
         backgroundRect.setAttribute("width", String(width));
         backgroundRect.setAttribute("height", String(height));
         backgroundRect.setAttribute("fill", background);
@@ -808,7 +808,7 @@ export class MindMapView extends ItemView {
         let offset = 0;
         const add = (chunk: string | Uint8Array): void => {
             const bytes = typeof chunk === "string" ? encoder.encode(chunk) : chunk;
-            chunks.push(bytes as unknown as BlobPart);
+            chunks.push(Uint8Array.from(bytes).buffer);
             offset += bytes.length;
         };
         const object = (number: number, body: string): void => {
@@ -827,7 +827,7 @@ export class MindMapView extends ItemView {
         object(5, `<< /Length ${encoder.encode(content).length} >>\nstream\n${content}endstream`);
 
         const xref = offset;
-        add(`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((entry) => `${String(entry).padStart(10, "0")} 00000 n `).join("\n")}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+        add(`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((entry) => `${entry.toString().padStart(10, "0")} 00000 n `).join("\n")}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
         return new Blob(chunks, { type: "application/pdf" });
     }
 
@@ -842,7 +842,7 @@ export class MindMapView extends ItemView {
 
     private downloadBlob(blob: Blob, filename: string): void {
         const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        const link = activeDocument.createElement("a");
         link.href = url;
         link.download = filename;
         link.click();
@@ -851,7 +851,7 @@ export class MindMapView extends ItemView {
 
     private getDownloadBaseName(): string {
         const name = this.file?.path?.split("/").pop()?.replace(/\.md$/i, "") || "mind-map";
-        return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "-").trim() || "mind-map";
+        return [...name].map((character) => '<>:"/\\|?*'.includes(character) || character.charCodeAt(0) < 32 ? "-" : character).join("").trim() || "mind-map";
     }
 
     private openNodeMenu(nodeId: string, event: MouseEvent): void {
@@ -1440,7 +1440,7 @@ export class MindMapView extends ItemView {
         const ty = 8 - minY * scale;
 
         this.minimapEl.empty();
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        const svg = activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
         svg.setAttribute("class", "mindmap-minimap-svg");
 
@@ -1451,7 +1451,7 @@ export class MindMapView extends ItemView {
                 for (const child of node.children) {
                     const to = positions.get(child.id);
                     if (to) {
-                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        const line = activeDocument.createElementNS("http://www.w3.org/2000/svg", "line");
                         line.setAttribute("x1", String(from.x * scale + tx));
                         line.setAttribute("y1", String((from.y + 24) * scale + ty));
                         line.setAttribute("x2", String(to.x * scale + tx));
@@ -1463,7 +1463,7 @@ export class MindMapView extends ItemView {
                 }
             }
 
-            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            const rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
             rect.setAttribute("x", String((from.x - 80) * scale + tx));
             rect.setAttribute("y", String(from.y * scale + ty));
             rect.setAttribute("width", String(160 * scale));
@@ -1477,7 +1477,7 @@ export class MindMapView extends ItemView {
 
         const viewport = this.canvas?.getViewportSize();
         if (viewport) {
-            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            const rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
             rect.setAttribute("x", String((-this.state.pan.x) * scale + tx));
             rect.setAttribute("y", String((-this.state.pan.y) * scale + ty));
             rect.setAttribute("width", String((viewport.width / this.state.zoom) * scale));
@@ -1501,7 +1501,7 @@ export class MindMapView extends ItemView {
 
     private setupSpacePanHandlers(): void {
         this.registerDomEvent(window, "keydown", (event: KeyboardEvent) => {
-            if (event.code === "Space" && !(event.target instanceof HTMLInputElement)) {
+            if (event.code === "Space" && !this.isTextInputTarget(event.target)) {
                 this.isSpacePanPressed = true;
             }
         });
@@ -1583,22 +1583,11 @@ class NodeNoteModal extends Modal {
     onOpen(): void {
         this.setTitle(`Node note: ${this.nodeTitle}`);
         this.modalEl.addClass("mindmap-node-note-modal-shell");
-        this.modalEl.style.setProperty("width", "min(640px, calc(100vw - 48px))", "important");
-        this.modalEl.style.setProperty("max-width", "calc(100vw - 48px)", "important");
-        this.modalEl.style.setProperty("max-height", "90vh", "important");
         this.contentEl.empty();
         this.contentEl.addClass("mindmap-node-note-modal");
-        this.contentEl.style.setProperty("width", "auto", "important");
-        this.contentEl.style.setProperty("max-width", "100%", "important");
-        this.contentEl.style.setProperty("min-width", "0", "important");
-        this.contentEl.style.setProperty("box-sizing", "border-box");
 
         const textarea = this.contentEl.createEl("textarea");
         textarea.addClass("mindmap-node-note-textarea");
-        textarea.style.setProperty("width", "100%", "important");
-        textarea.style.setProperty("max-width", "100%", "important");
-        textarea.style.setProperty("min-width", "0", "important");
-        textarea.style.setProperty("box-sizing", "border-box");
         textarea.value = this.initialValue;
 
         const buttons = this.contentEl.createDiv("mindmap-text-modal-buttons");
@@ -1636,13 +1625,6 @@ class NodeNoteModal extends Modal {
 
     onClose(): void {
         this.modalEl.removeClass("mindmap-node-note-modal-shell");
-        this.modalEl.style.removeProperty("width");
-        this.modalEl.style.removeProperty("max-width");
-        this.modalEl.style.removeProperty("max-height");
-        this.contentEl.style.removeProperty("width");
-        this.contentEl.style.removeProperty("max-width");
-        this.contentEl.style.removeProperty("min-width");
-        this.contentEl.style.removeProperty("box-sizing");
         this.contentEl.empty();
     }
 }

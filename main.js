@@ -63,17 +63,20 @@ function parseMindMap(content) {
       return null;
     }
     const data = (0, import_obsidian.parseYaml)(frontmatterMatch[1]);
-    if (!(data == null ? void 0 : data.mindmap)) return null;
+    if (!isRecord(data) || !("mindmap" in data)) return null;
     return normalizeMindMap(data.mindmap);
   } catch (e) {
     console.error("Failed to parse mind map:", e);
     return null;
   }
 }
+function isRecord(value) {
+  return typeof value === "object" && value !== null;
+}
 function normalizeMindMap(data) {
-  if (!data.root) return null;
+  if (!isRecord(data) || !("root" in data)) return null;
   return migrateMindMap({
-    version: data.version || "1.0",
+    version: typeof data.version === "string" ? data.version : "1.0",
     root: normalizeNode(data.root),
     connections: normalizeConnections(data.connections),
     view: normalizeViewState(data.view)
@@ -101,18 +104,19 @@ function normalizeNode(node) {
   if (Array.isArray(node)) {
     node = (_a = node[0]) != null ? _a : {};
   }
+  const value = isRecord(node) ? node : {};
   return {
-    id: node.id || crypto.randomUUID(),
-    content: node.content || "Untitled",
-    note: normalizeOptionalText(node.note),
-    linkedFilePath: normalizeOptionalText(node.linkedFilePath),
-    children: Array.isArray(node.children) ? node.children.map(normalizeNode) : [],
-    collapsed: node.collapsed === true ? true : void 0,
-    position: normalizePosition(node.position)
+    id: typeof value.id === "string" ? value.id : crypto.randomUUID(),
+    content: typeof value.content === "string" ? value.content : "Untitled",
+    note: normalizeOptionalText(value.note),
+    linkedFilePath: normalizeOptionalText(value.linkedFilePath),
+    children: Array.isArray(value.children) ? value.children.map(normalizeNode) : [],
+    collapsed: value.collapsed === true ? true : void 0,
+    position: normalizePosition(value.position)
   };
 }
 function normalizePosition(position) {
-  if (!position || typeof position.x !== "number" || typeof position.y !== "number") {
+  if (!isRecord(position) || typeof position.x !== "number" || typeof position.y !== "number") {
     return void 0;
   }
   return {
@@ -125,7 +129,7 @@ function normalizeOptionalText(value) {
 }
 function normalizeViewState(view) {
   var _a;
-  if (!view) return void 0;
+  if (!isRecord(view)) return void 0;
   const zoom = typeof view.zoom === "number" ? Math.min(2.5, Math.max(0.4, view.zoom)) : DEFAULT_VIEW_STATE.zoom;
   const pan = (_a = normalizePosition(view.pan)) != null ? _a : DEFAULT_VIEW_STATE.pan;
   return {
@@ -135,7 +139,7 @@ function normalizeViewState(view) {
 }
 function normalizeConnections(connections) {
   if (!Array.isArray(connections)) return [];
-  return connections.filter((connection) => typeof (connection == null ? void 0 : connection.fromNodeId) === "string" && typeof (connection == null ? void 0 : connection.toNodeId) === "string").map((connection) => ({
+  return connections.filter((connection) => isRecord(connection) && typeof connection.fromNodeId === "string" && typeof connection.toNodeId === "string").map((connection) => ({
     id: typeof connection.id === "string" ? connection.id : crypto.randomUUID(),
     fromNodeId: connection.fromNodeId,
     toNodeId: connection.toNodeId
@@ -314,7 +318,7 @@ var _MindMapCanvas = class _MindMapCanvas {
   }
   createSVG() {
     if (!this.svgElement) {
-      this.svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      this.svgElement = activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
       this.svgElement.classList.add("mindmap-svg");
       this.svgElement.addEventListener("pointerdown", (event) => this.handleSvgPointerDown(event));
       this.svgElement.addEventListener("contextmenu", (event) => this.handleSvgContextMenu(event));
@@ -398,7 +402,7 @@ var _MindMapCanvas = class _MindMapCanvas {
   }
   renderEdge(from, to) {
     if (!this.svgElement) return;
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const path = activeDocument.createElementNS("http://www.w3.org/2000/svg", "path");
     const displayFrom = this.toDisplayPosition(from);
     const displayTo = this.toDisplayPosition(to);
     const startX = displayFrom.x + _MindMapCanvas.NODE_WIDTH / 2;
@@ -425,7 +429,7 @@ var _MindMapCanvas = class _MindMapCanvas {
     }
   }
   createEdgePath(from, to) {
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const path = activeDocument.createElementNS("http://www.w3.org/2000/svg", "path");
     const displayFrom = this.toDisplayPosition(from);
     const displayTo = this.toDisplayPosition(to);
     const startX = displayFrom.x + _MindMapCanvas.NODE_WIDTH / 2;
@@ -450,14 +454,14 @@ var _MindMapCanvas = class _MindMapCanvas {
     if (!this.svgElement) return;
     const pos = this.positions.get(node.id);
     if (!pos) return;
-    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const g = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
     g.setAttribute("data-node-id", node.id);
     g.setAttribute("class", "mindmap-node");
     this.setNodeTransform(g, pos);
     g.addEventListener("pointerdown", (event) => this.handleNodePointerDown(event, node.id));
     g.addEventListener("pointerup", (event) => this.handleNodePointerUp(event, node.id));
     g.addEventListener("contextmenu", (event) => this.handleNodeContextMenu(event, node.id));
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
     rect.setAttribute("width", String(_MindMapCanvas.NODE_WIDTH));
     rect.setAttribute("height", String(_MindMapCanvas.NODE_HEIGHT));
     rect.setAttribute("rx", "8");
@@ -465,15 +469,15 @@ var _MindMapCanvas = class _MindMapCanvas {
     rect.setAttribute("class", this.getNodeClass(node, isSelected));
     g.appendChild(rect);
     if (node.children.length > 0 && node.id !== this.editingNodeId) {
-      const toggle = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const toggle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
       toggle.setAttribute("class", "mindmap-node-action");
       toggle.setAttribute("data-node-action", "toggle");
       toggle.setAttribute("transform", "translate(12, 24)");
-      const toggleCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      const toggleCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
       toggleCircle.setAttribute("r", "10");
       toggleCircle.setAttribute("class", "mindmap-node-action-circle");
       toggle.appendChild(toggleCircle);
-      const toggleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const toggleText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
       toggleText.setAttribute("text-anchor", "middle");
       toggleText.setAttribute("y", "4");
       toggleText.setAttribute("class", "mindmap-node-action-text");
@@ -484,7 +488,7 @@ var _MindMapCanvas = class _MindMapCanvas {
     if (node.id === this.editingNodeId) {
       this.renderInlineEditor(g, node);
     } else {
-      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const text = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", String(_MindMapCanvas.NODE_WIDTH / 2));
       text.setAttribute("y", "29");
       text.setAttribute("text-anchor", "middle");
@@ -493,7 +497,7 @@ var _MindMapCanvas = class _MindMapCanvas {
       g.appendChild(text);
     }
     if (node.children.length > 0) {
-      const badge = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const badge = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
       badge.setAttribute("x", "30");
       badge.setAttribute("y", "43");
       badge.setAttribute("text-anchor", "middle");
@@ -502,16 +506,16 @@ var _MindMapCanvas = class _MindMapCanvas {
       g.appendChild(badge);
     }
     if (node.note) {
-      const noteBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const noteBadge = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
       noteBadge.setAttribute("class", "mindmap-node-note-indicator");
       noteBadge.setAttribute("transform", "translate(0, 0)");
-      const noteCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      const noteCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
       noteCircle.setAttribute("cx", "0");
       noteCircle.setAttribute("cy", "0");
       noteCircle.setAttribute("r", "8");
       noteCircle.setAttribute("class", "mindmap-node-note-bubble");
       noteBadge.appendChild(noteCircle);
-      const noteText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const noteText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
       noteText.setAttribute("text-anchor", "middle");
       noteText.setAttribute("y", "4");
       noteText.setAttribute("class", "mindmap-node-note-text");
@@ -519,30 +523,30 @@ var _MindMapCanvas = class _MindMapCanvas {
       noteBadge.appendChild(noteText);
       g.appendChild(noteBadge);
     }
-    const add = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const add = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
     add.setAttribute("class", "mindmap-node-action");
     add.setAttribute("data-node-action", "add-child");
     add.setAttribute("transform", `translate(${_MindMapCanvas.NODE_WIDTH - 12}, 24)`);
-    const addCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    const addCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
     addCircle.setAttribute("r", "10");
     addCircle.setAttribute("class", "mindmap-node-action-circle");
     add.appendChild(addCircle);
-    const addText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const addText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
     addText.setAttribute("text-anchor", "middle");
     addText.setAttribute("y", "4");
     addText.setAttribute("class", "mindmap-node-action-text");
     addText.textContent = "+";
     add.appendChild(addText);
     g.appendChild(add);
-    const remove = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const remove = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
     remove.setAttribute("class", "mindmap-node-action mindmap-node-action-danger");
     remove.setAttribute("data-node-action", "delete");
     remove.setAttribute("transform", `translate(${_MindMapCanvas.NODE_WIDTH - 12}, -2)`);
-    const removeCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    const removeCircle = activeDocument.createElementNS("http://www.w3.org/2000/svg", "circle");
     removeCircle.setAttribute("r", "9");
     removeCircle.setAttribute("class", "mindmap-node-action-circle");
     remove.appendChild(removeCircle);
-    const removeText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const removeText = activeDocument.createElementNS("http://www.w3.org/2000/svg", "text");
     removeText.setAttribute("text-anchor", "middle");
     removeText.setAttribute("y", "4");
     removeText.setAttribute("class", "mindmap-node-action-text");
@@ -553,12 +557,12 @@ var _MindMapCanvas = class _MindMapCanvas {
     this.nodeElements.set(node.id, g);
   }
   renderInlineEditor(group, node) {
-    const foreignObject = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+    const foreignObject = activeDocument.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
     foreignObject.setAttribute("x", "14");
     foreignObject.setAttribute("y", "8");
     foreignObject.setAttribute("width", String(_MindMapCanvas.NODE_WIDTH - 28));
     foreignObject.setAttribute("height", String(_MindMapCanvas.NODE_HEIGHT - 16));
-    const input = document.createElement("input");
+    const input = activeDocument.createElement("input");
     input.type = "text";
     input.value = node.content;
     input.className = "mindmap-inline-rename";
@@ -763,7 +767,7 @@ var _MindMapCanvas = class _MindMapCanvas {
   }
   getDropTarget(clientX, clientY, draggedNodeId) {
     var _a;
-    for (const element of document.elementsFromPoint(clientX, clientY)) {
+    for (const element of activeDocument.elementsFromPoint(clientX, clientY)) {
       const nodeElement = element.closest("[data-node-id]");
       const nodeId = (_a = nodeElement == null ? void 0 : nodeElement.getAttribute("data-node-id")) != null ? _a : null;
       if (nodeId && nodeId !== draggedNodeId) {
@@ -804,7 +808,7 @@ var _MindMapCanvas = class _MindMapCanvas {
     if (!this.svgElement || !this.boxSelectState) return;
     let rect = this.svgElement.querySelector(".mindmap-selection-box");
     if (!rect) {
-      rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
       rect.setAttribute("class", "mindmap-selection-box");
       this.svgElement.appendChild(rect);
     }
@@ -1067,7 +1071,7 @@ var MIN_ZOOM = 0.4;
 var MAX_ZOOM = 2.5;
 var ZOOM_STEP = 0.1;
 var AUTOSAVE_DELAY_MS = 800;
-var MindMapView = class extends import_obsidian2.ItemView {
+var MindMapView = class _MindMapView extends import_obsidian2.ItemView {
   constructor(leaf) {
     super(leaf);
     this.data = null;
@@ -1630,12 +1634,11 @@ var MindMapView = class extends import_obsidian2.ItemView {
     return false;
   }
   isActiveMindMapView() {
-    var _a;
-    return ((_a = this.app.workspace.activeLeaf) == null ? void 0 : _a.view) === this;
+    return this.app.workspace.getActiveViewOfType(_MindMapView) === this;
   }
   isTextInputTarget(target) {
     if (!(target instanceof HTMLElement)) return false;
-    return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target.isContentEditable;
+    return target.instanceOf(HTMLInputElement) || target.instanceOf(HTMLTextAreaElement) || target.isContentEditable;
   }
   openGuide() {
     new GuideModal(this.app).open();
@@ -1683,7 +1686,7 @@ var MindMapView = class extends import_obsidian2.ItemView {
         img.src = url;
       });
       const scale = 2;
-      const canvas = document.createElement("canvas");
+      const canvas = activeDocument.createElement("canvas");
       canvas.width = exportSvg.width * scale;
       canvas.height = exportSvg.height * scale;
       const context = canvas.getContext("2d");
@@ -1711,7 +1714,7 @@ var MindMapView = class extends import_obsidian2.ItemView {
     clone.setAttribute("width", String(width));
     clone.setAttribute("height", String(height));
     this.inlineSvgStyles(source, clone);
-    const backgroundRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const backgroundRect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
     backgroundRect.setAttribute("width", String(width));
     backgroundRect.setAttribute("height", String(height));
     backgroundRect.setAttribute("fill", background);
@@ -1762,7 +1765,7 @@ Q
     let offset = 0;
     const add = (chunk) => {
       const bytes = typeof chunk === "string" ? encoder.encode(chunk) : chunk;
-      chunks.push(bytes);
+      chunks.push(Uint8Array.from(bytes).buffer);
       offset += bytes.length;
     };
     const object = (number, body) => {
@@ -1790,7 +1793,7 @@ ${content}endstream`);
     add(`xref
 0 6
 0000000000 65535 f 
-${offsets.slice(1).map((entry) => `${String(entry).padStart(10, "0")} 00000 n `).join("\n")}
+${offsets.slice(1).map((entry) => `${entry.toString().padStart(10, "0")} 00000 n `).join("\n")}
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
@@ -1809,7 +1812,7 @@ ${xref}
   }
   downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = activeDocument.createElement("a");
     link.href = url;
     link.download = filename;
     link.click();
@@ -1818,7 +1821,7 @@ ${xref}
   getDownloadBaseName() {
     var _a, _b, _c;
     const name = ((_c = (_b = (_a = this.file) == null ? void 0 : _a.path) == null ? void 0 : _b.split("/").pop()) == null ? void 0 : _c.replace(/\.md$/i, "")) || "mind-map";
-    return name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "-").trim() || "mind-map";
+    return [...name].map((character) => '<>:"/\\|?*'.includes(character) || character.charCodeAt(0) < 32 ? "-" : character).join("").trim() || "mind-map";
   }
   openNodeMenu(nodeId, event) {
     if (!this.data) return;
@@ -2317,7 +2320,7 @@ ${xref}
     const tx = 8 - minX * scale;
     const ty = 8 - minY * scale;
     this.minimapEl.empty();
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const svg = activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
     svg.setAttribute("class", "mindmap-minimap-svg");
     const drawNode = (node) => {
@@ -2327,7 +2330,7 @@ ${xref}
         for (const child of node.children) {
           const to = positions.get(child.id);
           if (to) {
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const line = activeDocument.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", String(from.x * scale + tx));
             line.setAttribute("y1", String((from.y + 24) * scale + ty));
             line.setAttribute("x2", String(to.x * scale + tx));
@@ -2338,7 +2341,7 @@ ${xref}
           drawNode(child);
         }
       }
-      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      const rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
       rect.setAttribute("x", String((from.x - 80) * scale + tx));
       rect.setAttribute("y", String(from.y * scale + ty));
       rect.setAttribute("width", String(160 * scale));
@@ -2350,7 +2353,7 @@ ${xref}
     drawNode(root);
     const viewport = (_a = this.canvas) == null ? void 0 : _a.getViewportSize();
     if (viewport) {
-      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      const rect = activeDocument.createElementNS("http://www.w3.org/2000/svg", "rect");
       rect.setAttribute("x", String(-this.state.pan.x * scale + tx));
       rect.setAttribute("y", String(-this.state.pan.y * scale + ty));
       rect.setAttribute("width", String(viewport.width / this.state.zoom * scale));
@@ -2371,7 +2374,7 @@ ${xref}
   }
   setupSpacePanHandlers() {
     this.registerDomEvent(window, "keydown", (event) => {
-      if (event.code === "Space" && !(event.target instanceof HTMLInputElement)) {
+      if (event.code === "Space" && !this.isTextInputTarget(event.target)) {
         this.isSpacePanPressed = true;
       }
     });
@@ -2439,21 +2442,10 @@ var NodeNoteModal = class extends import_obsidian2.Modal {
   onOpen() {
     this.setTitle(`Node note: ${this.nodeTitle}`);
     this.modalEl.addClass("mindmap-node-note-modal-shell");
-    this.modalEl.style.setProperty("width", "min(640px, calc(100vw - 48px))", "important");
-    this.modalEl.style.setProperty("max-width", "calc(100vw - 48px)", "important");
-    this.modalEl.style.setProperty("max-height", "90vh", "important");
     this.contentEl.empty();
     this.contentEl.addClass("mindmap-node-note-modal");
-    this.contentEl.style.setProperty("width", "auto", "important");
-    this.contentEl.style.setProperty("max-width", "100%", "important");
-    this.contentEl.style.setProperty("min-width", "0", "important");
-    this.contentEl.style.setProperty("box-sizing", "border-box");
     const textarea = this.contentEl.createEl("textarea");
     textarea.addClass("mindmap-node-note-textarea");
-    textarea.style.setProperty("width", "100%", "important");
-    textarea.style.setProperty("max-width", "100%", "important");
-    textarea.style.setProperty("min-width", "0", "important");
-    textarea.style.setProperty("box-sizing", "border-box");
     textarea.value = this.initialValue;
     const buttons = this.contentEl.createDiv("mindmap-text-modal-buttons");
     const clearButton = buttons.createEl("button", { text: "Clear" });
@@ -2487,13 +2479,6 @@ var NodeNoteModal = class extends import_obsidian2.Modal {
   }
   onClose() {
     this.modalEl.removeClass("mindmap-node-note-modal-shell");
-    this.modalEl.style.removeProperty("width");
-    this.modalEl.style.removeProperty("max-width");
-    this.modalEl.style.removeProperty("max-height");
-    this.contentEl.style.removeProperty("width");
-    this.contentEl.style.removeProperty("max-width");
-    this.contentEl.style.removeProperty("min-width");
-    this.contentEl.style.removeProperty("box-sizing");
     this.contentEl.empty();
   }
 };
@@ -2638,15 +2623,12 @@ function registerCommands(app, plugin) {
     id: "obsidian-mindmap-save",
     name: "Mind map: Save current mind map",
     checkCallback: (checking) => {
-      const activeLeaf = app.workspace.activeLeaf;
-      if (!activeLeaf || activeLeaf.view.getViewType() !== VIEW_TYPE) {
+      const view = app.workspace.getActiveViewOfType(MindMapView);
+      if (!view) {
         return false;
       }
       if (!checking) {
-        const view = activeLeaf.view;
-        if (view instanceof MindMapView) {
-          void view.save();
-        }
+        void view.save();
       }
       return true;
     }
@@ -2662,7 +2644,7 @@ var MindMapSettingTab = class extends import_obsidian3.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Mind Map Settings" });
+    new import_obsidian3.Setting(containerEl).setName("Mind Map Settings").setHeading();
     containerEl.createEl("p", {
       text: "Additional settings will be added in future versions."
     });
