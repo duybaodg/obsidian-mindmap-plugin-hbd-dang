@@ -1,7 +1,7 @@
 {
   "id": "mindmap-plugin-hbd-dang",
   "name": "Mind Map Visual",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.15.0",
   "description": "Brainstorming-focused mind map plugin with auto-organized layouts and keyboard shortcuts",
   "author": "William Dang",
